@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "services": [
+    {
+      "name": "hello-service",
+      "route": "/hello",
+      "worker": "data-plane",
+      "version": "v1"
+    }
+  ]
+}
