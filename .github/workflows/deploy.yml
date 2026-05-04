@@ -1,0 +1,48 @@
+name: Isolate Mesh Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install wrangler
+        run: npm install -g wrangler
+
+      - name: Build Pages
+        working-directory: pages
+        run: |
+          npm ci || true
+          npm run build
+
+      - name: Deploy control-plane
+        working-directory: workers/control-plane
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler publish --env production
+
+      - name: Deploy data-plane
+        working-directory: workers/data-plane
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler publish --env production
+
+      - name: Deploy Pages (optional)
+        if: always()
+        working-directory: pages
+        run: |
+          echo "Pages deploy: connect repo to Cloudflare Pages via dashboard for automatic Pages deploys"
